@@ -7,8 +7,10 @@ import telegram
 import requests
 
 from dotenv import load_dotenv
-from exceptions import ResponseStatusCodeExeption, ResponseIsDictException, SendMessageException
-
+from exceptions import (
+    ResponseStatusCodeExeption, ResponseIsDictException,
+    SendMessageException
+)
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -38,12 +40,11 @@ def send_message(bot, message):
     chat_id = TELEGRAM_CHAT_ID
     try:
         return bot.send_message(chat_id, message)
-    except:
+    except SendMessageException:
         logging.error('Сообщение %s не отправлено!', message)
-        raise SendMessageException(f'Сообщение {message} не отправлено!')
+        raise
     finally:
         logging.info('Сообщение %s отправлено!', message)
-
 
 
 def get_api_answer(current_timestamp):
@@ -52,15 +53,19 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    except:
-        logging.error('Ошибка при запросе к основному API:')
+    except Exception as exc:
+        logging.error('Ошибка при запросе к основному API: %s', exc)
     if response.status_code != HTTPStatus.OK:
         logging.error('Статус код не 200!')
         raise ResponseStatusCodeExeption('API не ответил!')
     return response.json()
 
+
 def check_response(response):
-    """Проверяет, что ответ от API корректный и приведен к типам данных Python"""
+    """
+    Проверяет, что ответ от API корректный.
+    А так же, что он приведен к типам данных Python.
+    """
     homework_list = response['homeworks']
     if homework_list == []:
         raise IndexError('Список домашних работ пуст')
@@ -69,8 +74,9 @@ def check_response(response):
     if isinstance(homework_list, list):
         return homework_list[0]
 
+
 def parse_status(homework):
-    """Bзвлекает из информации о конкретной домашней работе статус этой работы"""
+    """Извлекает из конкретной домашней работы статус этой работы."""
     if 'homework_name' not in homework:
         logging.error('Нет ключа homework_name в ответе API')
         raise KeyError('Статуса нет!')
@@ -88,12 +94,14 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """Проверяет доступность переменных окружения"""
+    """Проверяет доступность переменных окружения."""
     try:
         return all((PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID))
-    except:
-        logging.critical('Отсутствие обязательных переменных окружения во время запуска бота!')
-        raise ValueError('1 или несколько токенов отсутсвуют!')
+    except Exception as exc:
+        logging.critical('Отсутствие обязательных переменных ',
+                         'окружения во время запуска бота!')
+        raise exc
+
 
 def main():
     """Основная логика работы бота."""
