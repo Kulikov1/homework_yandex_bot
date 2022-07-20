@@ -1,11 +1,11 @@
-class ResponseStatusCodeExeption(Exception):
-    """Исключение статауса ответа от сервера"""
-    pass
-
 class ResponseIsDictException(Exception):
     """Исключение проверки типа данных ответа API"""
-    pass
 
 class SendMessageException(Exception):
     """Исключение отправки сообщения"""
-    pass
+
+class RequestAPIException(Exception):
+    """Ошибка ответа от API"""
+
+class ListHomeworksIsEmptyExceptions(Exception):
+    """За отчетный период изменений нет"""
