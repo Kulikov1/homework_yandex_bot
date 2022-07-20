@@ -8,7 +8,7 @@ import requests
 
 from dotenv import load_dotenv
 from exceptions import (
-    ResponseIsDictException,SendMessageException,
+    ResponseIsDictException, SendMessageException,
     RequestAPIException, ListHomeworksIsEmptyExceptions
 )
 load_dotenv()
@@ -68,7 +68,9 @@ def check_response(response):
         raise KeyError('Ключ homeworks отсутсвуетв в словаре')
     homework_list = response['homeworks']
     if homework_list == []:
-        raise ListHomeworksIsEmptyExceptions('Изменений в списке домашних работ нет')
+        raise ListHomeworksIsEmptyExceptions(
+            'Изменений в списке домашних работ нет'
+        )
     if isinstance(homework_list, list):
         return homework_list[0]
     raise Exception('Response от API не корректный')
@@ -107,7 +109,7 @@ def main():
             response = get_api_answer(current_timestamp)
             chek = check_response(response)
             message = parse_status(chek)
-            if sended_message!= message:
+            if sended_message != message:
                 send_message(bot, message)
                 logging.info('Сообщение %s отправлено!', message)
             sended_message = message
