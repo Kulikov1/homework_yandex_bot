@@ -62,10 +62,10 @@ def check_response(response):
     Проверяет, что ответ от API корректный.
     А так же, что он приведен к типам данных Python.
     """
-    if 'homeworks' not in response:
+#   if "homeworks" not in response:
+#        raise KeyError('Ключ homeworks отсутсвуетв в словаре')
+    if not any(element in 'homeworks' for element in response):
         raise KeyError('Ключ homeworks отсутсвуетв в словаре')
-    if not isinstance(response, dict):
-        raise ResponseIsDictException('Ответ от api вернулся не словарем!')
     homework_list = response['homeworks']
     if homework_list == []:
         raise ListHomeworksIsEmptyExceptions('Изменений в списке домашних работ нет')
