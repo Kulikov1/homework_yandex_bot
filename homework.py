@@ -118,6 +118,8 @@ def main():
         except SendMessageException:
             logging.error('Бот не может отправить сообщение')
             raise SendMessageException('Бот не может отправить сообщение')
+        except ListHomeworksIsEmptyExceptions:
+            logging.info('Изменений в статусе работы нет.')
         except Exception as error:
             error_message = f'Сбой в работе программы: {error}'
             if sended_error_message != error_message:
