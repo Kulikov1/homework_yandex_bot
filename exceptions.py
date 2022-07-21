@@ -1,6 +1,3 @@
-class ResponseIsDictException(Exception):
-    """Исключение проверки типа данных ответа API"""
-
 class SendMessageException(Exception):
     """Исключение отправки сообщения"""
 
@@ -9,3 +6,6 @@ class RequestAPIException(Exception):
 
 class ListHomeworksIsEmptyExceptions(Exception):
     """За отчетный период изменений нет"""
+
+class ResponseStatusException(Exception):
+    """Вызывается, если статус ответа от сервера не 200"""

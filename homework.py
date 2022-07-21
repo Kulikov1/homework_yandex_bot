@@ -2,14 +2,15 @@ import logging
 import os
 import time
 from http import HTTPStatus
+from xmlrpc.client import ResponseError
 
 import telegram
 import requests
 
 from dotenv import load_dotenv
 from exceptions import (
-    ResponseIsDictException, SendMessageException,
-    RequestAPIException, ListHomeworksIsEmptyExceptions
+    ResponseStatusException, SendMessageException,
+    RequestAPIException, ListHomeworksIsEmptyExceptions,
 )
 load_dotenv()
 
@@ -23,7 +24,7 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = 1532468150
 
-RETRY_TIME = 600
+RETRY_TIME = 6
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -39,8 +40,8 @@ def send_message(bot, message):
     """Функция отправки сообщения через телеграм бота."""
     try:
         return bot.send_message(TELEGRAM_CHAT_ID, message)
-    except Exception:
-        raise SendMessageException
+    except Exception as exc:
+        raise SendMessageException('Ошибка отправки собщения: %s', exc)
 
 
 def get_api_answer(current_timestamp):
@@ -48,13 +49,13 @@ def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         logging.info('Запрос к серверу.')
+        response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         if response.status_code != HTTPStatus.OK:
-            raise Exception('Код ответа от API не 200!')
+            raise ResponseStatusException('Код ответа от API не 200!')
         return response.json()
-    except Exception:
-        raise RequestAPIException
+    except Exception as exc:
+        raise RequestAPIException('Не получен ответ от API. Ошибка: %s', exc)
 
 
 def check_response(response):
@@ -62,10 +63,10 @@ def check_response(response):
     Проверяет, что ответ от API корректный.
     А так же, что он приведен к типам данных Python.
     """
-#   if "homeworks" not in response:
-#        raise KeyError('Ключ homeworks отсутсвуетв в словаре')
-    if not any(element in 'homeworks' for element in response):
-        raise KeyError('Ключ homeworks отсутсвуетв в словаре')
+    if not isinstance(response, dict):
+        raise TypeError('Response не является словарем.')
+    if 'homeworks' not in response:
+        raise KeyError('Ключ homeworks отсутсвует в словаре.')
     homework_list = response['homeworks']
     if homework_list == []:
         raise ListHomeworksIsEmptyExceptions(
@@ -73,7 +74,7 @@ def check_response(response):
         )
     if isinstance(homework_list, list):
         return homework_list[0]
-    raise Exception('Response от API не корректный')
+    raise ResponseError('Response от API не корректный')
 
 
 def parse_status(homework):
@@ -84,7 +85,7 @@ def parse_status(homework):
         raise KeyError('Нет ключа status в ответе API!')
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
-    if homework.get('status') not in HOMEWORK_STATUSES:
+    if homework_status not in HOMEWORK_STATUSES:
         raise KeyError(f'Статус {homework_status} не подходит!')
 
     verdict = HOMEWORK_STATUSES.get(homework_status)
@@ -117,14 +118,6 @@ def main():
         except SendMessageException:
             logging.error('Бот не может отправить сообщение')
             raise SendMessageException('Бот не может отправить сообщение')
-        except RequestAPIException:
-            logging.error('Ошибка ответа от API')
-            raise RequestAPIException('Ошибка ответа от API')
-        except ListHomeworksIsEmptyExceptions:
-            logging.info('Изменений в статусе работы нет.')
-        except ResponseIsDictException as exc:
-            logging.error(exc)
-            raise ResponseIsDictException(exc)
         except Exception as error:
             error_message = f'Сбой в работе программы: {error}'
             if sended_error_message != error_message:
