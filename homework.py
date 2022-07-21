@@ -1,4 +1,5 @@
 import logging
+import sys
 import os
 import time
 from http import HTTPStatus
@@ -16,7 +17,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
+handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
 
 
