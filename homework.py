@@ -17,7 +17,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
+handler = logging.StreamHandler()
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -125,6 +125,7 @@ def main():
             raise SendMessageException('Бот не может отправить сообщение')
         except ListHomeworksIsEmptyExceptions:
             logging.info('Изменений в статусе работы нет.')
+            print('Изменений в статусе работы нет.')
         except Exception as error:
             error_message = f'Сбой в работе программы: {error}'
             if sended_error_message != error_message:
