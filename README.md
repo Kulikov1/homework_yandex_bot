@@ -1,2 +1,2 @@
-# homework_bot
-python telegram bot
+# Телеграм бот
+Бот проверяет статус проверки домашней работы в yandex practicum и присылает ответ в телеграме.
